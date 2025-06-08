@@ -13,8 +13,8 @@
 #define AUTOMATION_START_PIN 7  // Output pin to start
 
 // Configuration for LEDs that turn on after successful scan
-#define LED_PIN 8         // Pin to trigger LEDs
-#define LED_TIME_ON 5000  // How long, in milliseconds, to keep LEDs on
+#define LED_PIN 8          // Pin to trigger LEDs
+#define LED_TIME_ON 5'000  // How long, in milliseconds, to keep LEDs on
 
 // SPI configuration for RFID scanner
 #define RST_PIN 9   // Reset Pin
@@ -23,6 +23,11 @@
 #define CIPO_PIN 12 // Controller In, Peripheral Out
 #define SCK_PIN 13  // Serial Clock
 
+// Time to wait before clearning scan history.  
+// Set to 0 to not automatically clear.
+// If set to 0, you cannot double scan.
+#define CLEAR_HISTORY_AFTER_MS 30'000
+
 // Location number to send after successful scan
 #define LOCATION 1 
 
@@ -30,6 +35,7 @@
 unsigned long automationStartedAt = 0;
 bool ledOn = false;
 String lastUid = "";
+unsigned long lastScanAt = 0;
 StringFifo<1> recentlyScanned; // Set the capacity to the number of recent scans to track.
                                // If an RFID tag is scanned, and it's in this list, it will be ignored.
                                // Prevents repeated scans.  MUST be at least 1.
@@ -76,6 +82,8 @@ void on_event_tag_scanned() {
   Serial.print(lastUid);
   Serial.print(" at location ");
   Serial.println(LOCATION, DEC);
+
+  lastScanAt = millis();
 
   if (recentlyScanned.full()) {
     recentlyScanned.drop();
@@ -159,6 +167,18 @@ void loop() {
 
   detectRFID();
   detectAutomationDone();
+  clearRecentScans();
+}
+
+void clearRecentScans() {
+  if (CLEAR_HISTORY_AFTER_MS > 0 && lastScanAt > 0 && millis() - lastScanAt > CLEAR_HISTORY_AFTER_MS) {
+    Serial.println("Clearning recent scans");
+    lastScanAt = 0;
+    while (!recentlyScanned.empty()) {
+      recentlyScanned.drop();
+    }
+    Serial.println("Done");
+  }
 }
 
 void detectAutomationDone() {
@@ -167,8 +187,28 @@ void detectAutomationDone() {
   }
 }
 
+bool connectWithExponentialBackoff(WiFiClient& client, const char* server, uint16_t port, int maxRetries = 5, int initialDelayMs = 100) {
+  int delayMs = initialDelayMs;
+
+  for (int attempt = 1; attempt <= maxRetries; attempt++) {
+    if (client.connect(server, port)) {
+      return true;
+    }
+
+    Serial.print("Connection failed. Backing off for ");
+    Serial.print(delayMs);
+    Serial.println("ms...");
+    delay(delayMs);
+    delayMs *= 2;  // Exponential backoff
+  }
+
+  Serial.println("All connection attempts failed!");
+  return false;
+}
+
+
 void sendPostRequest(String uid) {
-  if (client.connect(server, port)) {
+  if (connectWithExponentialBackoff(client, server, port)) {
     // JSON payload
     StaticJsonDocument<200> jsonDoc;
     jsonDoc["id"] = uid;
@@ -204,44 +244,40 @@ void sendPostRequest(String uid) {
 }
 
 void wifiConnect() {
-  bool connected = false;
+  for (int retries = 0; retries < 5; retries++) {
+    for (int i = 0; i < credentialCount; i++) {
+      Serial.print("Attempting to connect to SSID=");
+      Serial.print(credentials[i].ssid);
 
-  for (int i = 0; i < credentialCount; i++) {
-    Serial.print("Attempting to connect to SSID=");
-    Serial.print(credentials[i].ssid);
+      if (credentials[i].password == nullptr || credentials[i].password[0] == '\0') {
+        WiFi.begin(credentials[i].ssid);
+      } else {
+        WiFi.begin(credentials[i].ssid, credentials[i].password);
+      }
 
-    if (credentials[i].password == nullptr || credentials[i].password[0] == '\0') {
-      WiFi.begin(credentials[i].ssid);
-    } else {
-      WiFi.begin(credentials[i].ssid, credentials[i].password);
-    }
+      int attempts = 0;
+      while (WiFi.status() != WL_CONNECTED && attempts < 10) {
+        delay(1000);
+        Serial.print(".");
+        attempts++;
+      }
 
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-      delay(1000);
-      Serial.print(".");
-      attempts++;
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-      delay(2000);
-      Serial.print("\nConnected to SSID=");
-      Serial.print(WiFi.SSID());
-      Serial.print(", IP Address=");
-      Serial.print(WiFi.localIP());
-      Serial.print(", Gateway=");
-      Serial.print(WiFi.gatewayIP());
-      Serial.println("");
-      connected = true;
-      break;
-    } else {
-      Serial.println("Failed to connect.");
+      if (WiFi.status() == WL_CONNECTED) {
+        delay(2000);
+        Serial.print("\nConnected to SSID=");
+        Serial.print(WiFi.SSID());
+        Serial.print(", IP Address=");
+        Serial.print(WiFi.localIP());
+        Serial.print(", Gateway=");
+        Serial.print(WiFi.gatewayIP());
+        Serial.println("");
+        return;
+      } else {
+        Serial.println("Failed to connect.");
+      }
     }
   }
-
-  if (!connected) {
-    Serial.println("Could not connect to any known networks.");
-  }
+  Serial.println("Could not connect to any known networks.");
 }
 
 void detectRFID() {
@@ -251,7 +287,7 @@ void detectRFID() {
       return;
     }
     lastUid = uidStr;
-  
+
     mfrc522.PICC_HaltA();
 
     fsm_led.trigger(EVENT_TAG_SCANNED);
