@@ -7,6 +7,7 @@
 
 #include "StringFifo.h"
 #include "Matrix.h"
+#include "WifiCredentials.h"
 
 // Pins used to control automation
 #define AUTOMATION_END_PIN 6    // Input pin when finished
@@ -30,6 +31,36 @@
 
 // Location number to send after successful scan
 #define LOCATION 1 
+
+// Add wifi credentials, to be tried in order until a successful connection.
+// For local development you can define credentials[] in a secrets.h file to add
+// you home network.  
+//
+// Sample secrets.h file:
+//
+//   #ifndef SECRETS_H
+//   #define SECRETS_H
+//   #define CREDENTIALS
+//   static const WifiCredential credentials[] = {
+//     {"MyNetwork", "MyPassword"},
+//     {"Life.Church", nullptr},  // open network
+//   };
+//   #endif
+//
+// Then simply uncomment the #include "secrets.h" line below.
+// #include "secrets.h"
+#ifndef CREDENTIALS
+static const WifiCredential credentials[] = {
+  {"Life.Church", nullptr},  // open network
+};
+#endif
+const int credentialCount = sizeof(credentials) / sizeof(credentials[0]);
+
+// Configure the IP address and port for the server software.
+// const char *server = "192.168.5.229";
+// const int port = 3000;
+const char* server = "atm-clv-37eca624ed8b.herokuapp.com";
+const int port = 80;
 
 // State
 unsigned long automationStartedAt = 0;
@@ -90,41 +121,6 @@ void on_event_tag_scanned() {
   }
   recentlyScanned.push(lastUid);
 }
-
-struct WifiCredential {
-  const char* ssid;
-  const char* password;  // Can be NULL or empty string
-};
-
-// Add wifi credentials, to be tried in order until a successful connection.
-// For local development you can define credentials[] in a secrets.h file to add
-// you home network.  
-//
-// Sample secrets.h file:
-//
-//   #ifndef SECRETS_H
-//   #define SECRETS_H
-//   #define CREDENTIALS
-//   static const WifiCredential credentials[] = {
-//     {"MyNetwork", "MyPassword"},
-//     {"Life.Church", nullptr},  // open network
-//   };
-//   #endif
-//
-// Then simply uncomment the #include "secrets.h" line below.
-// #include "secrets.h"
-#ifndef CREDENTIALS
-static const WifiCredential credentials[] = {
-  {"Life.Church", nullptr},  // open network
-};
-#endif
-const int credentialCount = sizeof(credentials) / sizeof(credentials[0]);
-
-// Configure the IP address and port for the server software.
-// const char *server = "192.168.5.229";
-// const int port = 3000;
-const char* server = "atm-clv-37eca624ed8b.herokuapp.com";
-const int port = 80;
 
 WiFiClient client;
 MFRC522 mfrc522(CS_PIN, RST_PIN);
