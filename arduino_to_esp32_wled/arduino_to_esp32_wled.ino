@@ -13,7 +13,7 @@
 
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-#include <ArduinoJson.h>          // v7.3.0+
+#include <ArduinoJson.h> // External: https://github.com/bblanchon/ArduinoJson v7.3.0+
 
 // ── UART-to-WLED (software) ─────────────────────────────────────────
 constexpr uint8_t  WLED_TX = 6;   // UNO ➜ WLED RX
