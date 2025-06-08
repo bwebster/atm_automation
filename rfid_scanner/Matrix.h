@@ -2,6 +2,8 @@
 #define MATRIX_H
 
 #include <Arduino.h>
+// External: https://github.com/arduino-libraries/ArduinoGraphics
+#include <ArduinoGraphics.h>
 #include "Arduino_LED_Matrix.h"
 #include "fonts.h"
 
@@ -24,10 +26,14 @@ private:
   void displayFrame();
   void addToFrame(char c, int pos);
 
+
 public:
   Matrix();
   void start();
-  void update(int v);
+  void number(int v);
+  void letter(char c);
+  void letterDelay(char c, int sec);
+  void ok();
 };
 
 #endif

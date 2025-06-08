@@ -4,7 +4,7 @@ Matrix::Matrix() {
   setup = false;  
 }
 
-void Matrix::update(int v) {
+void Matrix::number(int v) {
   if (!setup) {
     matrix.begin();
     setup = true;
@@ -13,6 +13,27 @@ void Matrix::update(int v) {
   clearFrame();
   addToFrame('0' + v, 4);
   displayFrame();
+}
+
+void Matrix::letter(char c) {
+  if (!setup) {
+    matrix.begin();
+    setup = true;
+  }
+
+  clearFrame();
+  addToFrame(c, 4);
+  displayFrame();
+}
+
+void Matrix::letterDelay(char c, int sec) {
+  letter(c);
+  delay(sec);
+}
+
+void Matrix::ok() {
+  letterDelay('O', 400);
+  letterDelay('K', 2000);
 }
 
 void Matrix::clearFrame() {
@@ -28,6 +49,11 @@ void Matrix::displayFrame() {
 }
 
 void Matrix::addToFrame(char c, int pos) {
+  if (!setup) {
+    matrix.begin();
+    setup = true;
+  }
+
   int index = -1;
   if (c >= '0' && c <= '9')
     index = c - '0';

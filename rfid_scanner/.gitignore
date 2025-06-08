@@ -1,0 +1,11 @@
+secrets.h
+
+# Arduino build files
+*.hex
+*.elf
+*.bin
+*.d
+*.o
+
+# Mac system files
+.DS_Store
