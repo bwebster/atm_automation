@@ -7,7 +7,7 @@
 */
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+#include <ArduinoJson.h> // External: https://github.com/bblanchon/ArduinoJson v7.3.0
 
 // ── UART to WLED ──────────────────────────────────────────────
 HardwareSerial WLED(1);             // UART1  (RX16 / TX17)
