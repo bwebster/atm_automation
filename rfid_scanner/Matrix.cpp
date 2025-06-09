@@ -33,7 +33,7 @@ void Matrix::letterDelay(char c, int sec) {
 
 void Matrix::ok() {
   letterDelay('O', 400);
-  letterDelay('K', 2000);
+  letterDelay('K', 1000);
 }
 
 void Matrix::clearFrame() {
