@@ -15,14 +15,24 @@ void setup() {
   while (!Serial)
     ;
 
+<<<<<<< Updated upstream
   pinMode(TRIGGER_PIN, INPUT); 
   pinMode(DONE_PIN, OUTPUT);
   digitalWrite(DONE_PIN, LOW);
 
+=======
+  Serial.println("Setting up pins");
+  pinMode(TRIGGER_PIN, INPUT_PULLDOWN); 
+  pinMode(DONE_PIN, OUTPUT);
+  digitalWrite(DONE_PIN, LOW);
+
+  Serial.println("Initializing mp3 module");
+>>>>>>> Stashed changes
   MP3Serial.begin(BAUD, SERIAL_8N1, 21, 22);   // RX, TX
   delay(800);                  // allow module to boot
   player.begin();
   player.setVolume(25);        // 0…30
+<<<<<<< Updated upstream
   // player.playSpecified(1);
   // Serial.println("Playing track 1");
 }
@@ -61,4 +71,28 @@ void loop() {
     }
   }
   state = st;
+=======
+}
+
+void loop() {
+  static bool playing = false;
+  static bool lastTrig = LOW;
+
+  bool trig = digitalRead(TRIGGER_PIN);
+  if (lastTrig == LOW && trig == HIGH) { /* rising edge: LOW->HIGH */
+    Serial.println("Start track 1");
+    digitalWrite(DONE_PIN, LOW);
+    player.playSpecified(1);
+    playing = true;
+  }
+  lastTrig = trig;
+
+  if (playing) { 
+    DY::PlayState st = player.checkPlayState();
+    if (st == DY::PlayState::Stopped) {
+      Serial.println("Stopped");
+      digitalWrite(DONE_PIN, HIGH);
+    }
+  }
+>>>>>>> Stashed changes
 }
