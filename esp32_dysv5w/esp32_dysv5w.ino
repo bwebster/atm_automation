@@ -3,11 +3,13 @@
 #include <DYPlayerArduino.h>
 
 constexpr uint32_t BAUD = 9600;
-constexpr uint8_t TRIGGER_PIN = 25;   // HIGH on this pin starts track 1
-constexpr uint8_t DONE_PIN = 33;
+constexpr uint8_t RX_PIN = 25;   // HIGH on this pin starts track 1
+constexpr uint8_t TX_PIN = 33;
 
 HardwareSerial MP3Serial(2);
 DY::Player player(&MP3Serial);
+int track = 1;
+int numTracks = 3;
 
 void setup() {
   Serial.begin(115200);
@@ -16,9 +18,9 @@ void setup() {
     ;
 
   Serial.println("Setting up pins");
-  pinMode(TRIGGER_PIN, INPUT_PULLDOWN); 
-  pinMode(DONE_PIN, OUTPUT);
-  digitalWrite(DONE_PIN, LOW);
+  pinMode(RX_PIN, INPUT_PULLDOWN);   // RX from controller; HIGH to start sound
+  pinMode(TX_PIN, OUTPUT);           // TX to controller; HIGH by default, LOW when playing (simulates busy pin)
+  digitalWrite(TX_PIN, HIGH);
 
   Serial.println("Initializing mp3 module");
   MP3Serial.begin(BAUD, SERIAL_8N1, 21, 22);   // RX, TX
@@ -31,12 +33,17 @@ void loop() {
   static bool playing = false;
   static bool lastTrig = LOW;
 
-  bool trig = digitalRead(TRIGGER_PIN);
+  bool trig = digitalRead(RX_PIN);
   if (lastTrig == LOW && trig == HIGH) { /* rising edge: LOW->HIGH */
-    Serial.println("Start track 1");
-    digitalWrite(DONE_PIN, LOW);
-    player.playSpecified(1);
+    Serial.print("Start track");
+    Serial.println(track);
+    digitalWrite(TX_PIN, LOW);
+    player.playSpecified(track);
     playing = true;
+    track += 1;
+    if (track > numTracks) {
+      track = 1;
+    }
   }
   lastTrig = trig;
 
@@ -44,7 +51,8 @@ void loop() {
     DY::PlayState st = player.checkPlayState();
     if (st == DY::PlayState::Stopped) {
       Serial.println("Stopped");
-      digitalWrite(DONE_PIN, HIGH);
+      digitalWrite(TX_PIN, HIGH);
+      playing = false;
     }
   }
 }
