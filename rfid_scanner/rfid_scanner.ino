@@ -172,11 +172,11 @@ void on_event_automation_started(){}
 void on_event_automation_ended(){}
 
 void on_waiting_timed_out() {
-  Serial.println("[Timer] timed out in waiting state");
+  Serial.println("[Timer] timed out while waiting for automation to end");
 }
 
 void on_scanned_timed_out() { 
-  Serial.println("[Timer] timed out in scanned state");
+  Serial.println("[Timer] timed out while processing scan");
 }
 
 WiFiClient client;
