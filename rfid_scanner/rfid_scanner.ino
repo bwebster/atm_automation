@@ -200,7 +200,7 @@ void setup() {
 
   // waiting -> ready
   scanner.add_transition(&waiting, &ready, event_automation_ended, &on_event_automation_ended);
-  scanner.add_timed_transition(&waiting, &ready, 10'000, &on_waiting_timed_out);
+  scanner.add_timed_transition(&waiting, &ready, 15'000, &on_waiting_timed_out);
 
   // Wifi setup
   matrix.letterDelay('W', 1000);

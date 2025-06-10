@@ -21,12 +21,12 @@ public:
   void setup() override {
     Serial.println("Setting up digital signal automation");
     pinMode(TX_PIN, OUTPUT);
-    pinMode(RX_PIN, INPUT);
+    pinMode(RX_PIN, INPUT_PULLDOWN);
     digitalWrite(TX_PIN, LOW);
-    digitalWrite(RX_PIN, LOW);
   }
 
   void run(DoneCb cb) override {
+    Serial.println("Action - set automation TX to HIGH");
     digitalWrite(TX_PIN, HIGH);         // signal out
     doneCb_ = cb;
     active_ = true;
@@ -36,17 +36,16 @@ public:
   void update() override {
     if (!active_) return;
 
-    digitalWrite(TX_PIN, LOW);
-
     if (digitalRead(RX_PIN) == HIGH) {  // other side done
-      Serial.println("Automation - RX PIN HIGH");
+      Serial.println("Action - automation RX received HIGH");
       active_ = false;
       if (doneCb_) {
         DoneCb cb = doneCb_;            // copy in case cb restarts us
         doneCb_ = nullptr;
         cb();                           // notify caller exactly once
       }
-      // digitalWrite(TX_PIN, LOW);        // reset output
+      Serial.println("Action - set automation TX to LOW");
+      digitalWrite(TX_PIN, LOW);        // reset output
     }
   }
 
