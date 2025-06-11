@@ -15,6 +15,10 @@ The general behavior is:
   - Enable automation
   - Wait for automation to complete, or until we hit a configurable timeout
 
+### Customizing Behavior
+
+All customization options can be found in `config.h`, along with comments.
+
 ### Customizing Automation
 
 The code has a couple different automations that can be enabled, which implement a pretty basic interface
@@ -28,7 +32,7 @@ The `run(callback)` will be called to start the automation.  A `void (*)` functi
 
 #### DigitalSignalAutomation
 
-Enable by uncommenting the following lines in the main sketch:
+Enable by uncommenting the following lines in `config.h`:
 
 ```c++
 #include "DigitalSignalAutomation.h"
@@ -47,7 +51,7 @@ The `DigitalSignalAutomation` has the following functionality:
 
 #### SoundAutomation
 
-Enable by uncommenting the following lines in the main sketch:
+Enable by uncommenting the following lines in `config.h`:
 
 ```c++
 #include "SoundAutomation.h"
