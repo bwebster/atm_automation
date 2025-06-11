@@ -1,12 +1,3 @@
-/*  DigitalSignalAutomation.h
-    ──────────────────────────────────────────────────────────────
-    • Drives pin 8 HIGH,
-    • spins until pin 7 reads HIGH,
-    • then invokes the callback.
-    • Blocking – keeps the code base minimal and avoids timers /
-      interrupts.  Suitable when the handshake is expected to be quick.
-*/
-
 #ifndef DIGITAL_SIGNAL_AUTOMATION_H
 #define DIGITAL_SIGNAL_AUTOMATION_H
 
