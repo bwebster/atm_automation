@@ -90,7 +90,7 @@ You should see only your .mp3 files (and maybe a single `.fseventsd` file).
 
 ###### Cleanly copying files
 
-Create a directory (using Spotlight is fine) to keep you .mp3 files in.  After adding them, and naming them appropriately, run the following:
+Create a directory (using Spotlight is fine) to keep your .mp3 files in.  After adding them, and naming them appropriately, run the following (assumes you are keeping things in `~/Documents/mp3s`:
 
 ```bash
 > cd ~/Documents/mp3s
