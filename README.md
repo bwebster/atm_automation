@@ -28,11 +28,44 @@ The `run(callback)` will be called to start the automation.  A `void (*)` functi
 
 #### DigitalSignalAutomation
 
-Implemented by `rfid_scanner/DigitalSignalAutomation.h`.
+Enable by uncommenting the following lines in the main sketch:
+
+```c++
+#include "DigitalSignalAutomation.h"
+DigitalSignalAutomation automation;
+```
+
+Pinout:
+* Arduino pin 5 - TX, defaults to `LOW`
+* Arduino pin 4 - RX, defaults to `INPUT_PULLUP`
+
+The `DigitalSignalAutomation` has the following functionality:
+
+* When automation is triggered, writes `HIGH` to TX pin
+* Then waits to detect a rising edge `LOW` -> `HIGH` on RX pin
+  * When detected, executes callback passed to `run()` 
 
 #### SoundAutomation
 
-Implemented by `rfid_scanner/SoundAutomation.h`.
+Enable by uncommenting the following lines in the main sketch:
+
+```c++
+#include "SoundAutomation.h"
+SoundAutomation automation;
+```
+
+Pinout:
+* Arduino pin 5 - Serial TX
+* Arduino pin 4 - Serial RX
+* Arduino pin 3 - BUSY pin, defaults to `INPUT_PULLUP`
+
+The `SoundAutomation` has the following functionality:
+
+* Sets `track` to 1
+* When automation is triggered, writes serials commands to trigger track `track`
+  * Increments `track`
+* Then waits to detect a rising edge `LOW` -> `HIGH` on BUSY pin
+  * When detected, executes callback passed to `run()` 
 
 ##### MP3 Memory Card Tricks
 
