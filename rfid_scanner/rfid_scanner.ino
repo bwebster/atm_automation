@@ -8,17 +8,11 @@
 #include "StringFifo.h"
 #include "Matrix.h"
 #include "WifiCredentials.h"
-#include "Automation.h"
+#include "config.h"
 
-#include "DigitalSignalAutomation.h"
-DigitalSignalAutomation automation;
-
-// #include "SoundAutomation.h"
-// SoundAutomation automation;
 
 // Configuration for LEDs that turn on after successful scan
-#define LED_PIN 8          // Pin to trigger LEDs
-#define LED_TIME_ON 5'000  // How long, in milliseconds, to keep LEDs on
+#define LED_PIN 8    // Pin to trigger LEDs
 
 // SPI configuration for RFID scanner
 #define RST_PIN 9    // Reset Pin
@@ -27,57 +21,18 @@ DigitalSignalAutomation automation;
 #define CIPO_PIN 12  // Controller In, Peripheral Out
 #define SCK_PIN 13   // Serial Clock
 
-// Time to wait before clearning scan history.
-// Set to 0 to not automatically clear.
-// If set to 0, you cannot double scan.
-#define CLEAR_HISTORY_AFTER_MS 30'000
-
-// Location number to send after successful scan
-#define LOCATION 1
-
-// Add wifi credentials, to be tried in order until a successful connection.
-// For local development you can define credentials[] in a secrets.h file to add
-// you home network.
-//
-// Sample secrets.h file:
-//
-//   #ifndef SECRETS_H
-//   #define SECRETS_H
-//   #define CREDENTIALS
-//   static const WifiCredential credentials[] = {
-//     {"MyNetwork", "MyPassword"},
-//     {"Life.Church", nullptr},  // open network
-//   };
-//   #endif
-//
-// Then simply uncomment the #include "secrets.h" line below.
-// #include "secrets.h"
-#ifndef CREDENTIALS
-static const WifiCredential credentials[] = {
-  { "Life.Church", nullptr },  // open network
-};
-#endif
 const int credentialCount = sizeof(credentials) / sizeof(credentials[0]);
-
-// Configure the IP address and port for the server software.
-// const char *server = "192.168.5.229";
-// const int port = 3000;
-const char* server = "atm-clv-37eca624ed8b.herokuapp.com";
-const int port = 80;
 
 // State
 unsigned long automationStartedAt = 0;
 bool ledOn = false;
 String lastUid = "";
 unsigned long lastScanAt = 0;
-StringFifo<1> recentlyScanned;  // Set the capacity to the number of recent scans to track.
-                                // If an RFID tag is scanned, and it's in this list, it will be ignored.
-                                // Prevents repeated scans.  MUST be at least 1.
-
-// State machine
-// #define EVENT_TAG_SCANNED 0
-// #define EVENT_AUTOMATION_START 1
-// #define EVENT_AUTOMATION_DONE 2
+// Set the capacity to the number of recent scans to track.
+// If an RFID tag is scanned, and it's in this list, it will be ignored.
+// Prevents repeated scans.  MUST be at least 1.
+StringFifo<RECENT_SCAN_HISTORY_SIZE> recentlyScanned; 
+                                
 
 // Events
 const uint8_t event_tag_scanned = 0;
@@ -191,33 +146,31 @@ void setup() {
 
   Serial.println("\n\nSetup start");
 
-  // ready -> scanned
-  scanner.add_transition(&ready, &scanned, event_tag_scanned, &on_event_tag_scanned);
-
-  // scanned -> waiting
-  scanner.add_transition(&scanned, &waiting, event_automation_started, &on_event_acknowledged);
-  scanner.add_timed_transition(&scanned, &waiting, 5'000, &on_scanned_timed_out);
-
-  // waiting -> ready
-  scanner.add_transition(&waiting, &ready, event_automation_ended, &on_event_automation_ended);
-  scanner.add_timed_transition(&waiting, &ready, 15'000, &on_waiting_timed_out);
-
-  // Wifi setup
-  matrix.letterDelay('W', 1000);
-  wifi_connect();
-  matrix.ok();
-
-  // Scanner setup
-  matrix.letterDelay('S', 1000);
-  SPI.begin();
-  mfrc522.PCD_Init();
-  matrix.ok();
-
+  // Pins
   pinMode(LED_PIN, OUTPUT);
 
-  automation.setup();
+  // FSM
+  // ready -> scanned
+  scanner.add_transition(&ready, &scanned, event_tag_scanned, &on_event_tag_scanned);
+  // scanned -> waiting
+  scanner.add_transition(&scanned, &waiting, event_automation_started, &on_event_acknowledged);
+  scanner.add_timed_transition(&scanned, &waiting, SCAN_TIMEOUT_MS, &on_scanned_timed_out);
+  // waiting -> ready
+  scanner.add_transition(&waiting, &ready, event_automation_ended, &on_event_automation_ended);
+  scanner.add_timed_transition(&waiting, &ready, AUTOMATION_TIMEOUT_MS, &on_waiting_timed_out);
 
+  // Wifi setup
+  wifi_connect();
+  blink(1);
+
+  // Scanner setup
+  SPI.begin();
+  mfrc522.PCD_Init();
   matrix.number(LOCATION);
+  blink(2);
+
+  automation.setup();
+  blink(3);
 }
 
 void loop() {
@@ -357,4 +310,15 @@ String uid_string(byte* uid, byte length) {
     uidStr += String(uid[i], HEX);
   }
   return uidStr;
+}
+
+void blink(int times) {
+  digitalWrite(LED_PIN, LOW);
+  for (int i = 0; i < times; i++) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(120);
+    digitalWrite(LED_PIN, LOW);
+    delay(100);
+  }
+  delay(1000);
 }
