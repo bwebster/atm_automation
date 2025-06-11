@@ -1,118 +1,118 @@
 #include <SPI.h>
 #include <WiFiS3.h>
 
-#include "Fsm.h"         // External: https://github.com/jonblack/arduino-fsm v2.2.0
-#include <MFRC522.h>     // External: https://github.com/miguelbalboa/rfid v1.4.12
-#include <ArduinoJson.h> // External: https://github.com/bblanchon/ArduinoJson v7.3.0
+#include "Fsm.h"          // External: https://github.com/jonblack/arduino-fsm v2.2.0
+#include <MFRC522.h>      // External: https://github.com/miguelbalboa/rfid v1.4.12
+#include <ArduinoJson.h>  // External: https://github.com/bblanchon/ArduinoJson v7.3.0
 
 #include "StringFifo.h"
 #include "Matrix.h"
 #include "WifiCredentials.h"
+#include "config.h"
 
-// Pins used to control automation
-#define AUTOMATION_END_PIN 6    // Input pin when finished
-#define AUTOMATION_START_PIN 7  // Output pin to start
 
 // Configuration for LEDs that turn on after successful scan
-#define LED_PIN 8          // Pin to trigger LEDs
-#define LED_TIME_ON 5'000  // How long, in milliseconds, to keep LEDs on
+#define LED_PIN 8    // Pin to trigger LEDs
 
 // SPI configuration for RFID scanner
-#define RST_PIN 9   // Reset Pin
-#define CS_PIN 10   // Chip Select
-#define COPI_PIN 11 // Controller Out Peripheral In
-#define CIPO_PIN 12 // Controller In, Peripheral Out
-#define SCK_PIN 13  // Serial Clock
+#define RST_PIN 9    // Reset Pin
+#define CS_PIN 10    // Chip Select
+#define COPI_PIN 11  // Controller Out Peripheral In
+#define CIPO_PIN 12  // Controller In, Peripheral Out
+#define SCK_PIN 13   // Serial Clock
 
-// Time to wait before clearning scan history.  
-// Set to 0 to not automatically clear.
-// If set to 0, you cannot double scan.
-#define CLEAR_HISTORY_AFTER_MS 30'000
-
-// Location number to send after successful scan
-#define LOCATION 1 
-
-// Add wifi credentials, to be tried in order until a successful connection.
-// For local development you can define credentials[] in a secrets.h file to add
-// you home network.  
-//
-// Sample secrets.h file:
-//
-//   #ifndef SECRETS_H
-//   #define SECRETS_H
-//   #define CREDENTIALS
-//   static const WifiCredential credentials[] = {
-//     {"MyNetwork", "MyPassword"},
-//     {"Life.Church", nullptr},  // open network
-//   };
-//   #endif
-//
-// Then simply uncomment the #include "secrets.h" line below.
-// #include "secrets.h"
-#ifndef CREDENTIALS
-static const WifiCredential credentials[] = {
-  {"Life.Church", nullptr},  // open network
-};
-#endif
 const int credentialCount = sizeof(credentials) / sizeof(credentials[0]);
-
-// Configure the IP address and port for the server software.
-// const char *server = "192.168.5.229";
-// const int port = 3000;
-const char* server = "atm-clv-37eca624ed8b.herokuapp.com";
-const int port = 80;
 
 // State
 unsigned long automationStartedAt = 0;
 bool ledOn = false;
 String lastUid = "";
 unsigned long lastScanAt = 0;
-StringFifo<1> recentlyScanned; // Set the capacity to the number of recent scans to track.
-                               // If an RFID tag is scanned, and it's in this list, it will be ignored.
-                               // Prevents repeated scans.  MUST be at least 1.
+// Set the capacity to the number of recent scans to track.
+// If an RFID tag is scanned, and it's in this list, it will be ignored.
+// Prevents repeated scans.  MUST be at least 1.
+StringFifo<RECENT_SCAN_HISTORY_SIZE> recentlyScanned; 
+                                
+
+// Events
+const uint8_t event_tag_scanned = 0;
+const uint8_t event_acknowledged = 1;
+const uint8_t event_automation_started = 2;
+const uint8_t event_automation_ended = 3;
+const uint8_t event_automation_timed_out = 4;
+
+// States
+State ready(&state_ready_on_enter, &state_ready_on, &state_ready_on_exit);
+State scanned(&state_scanned_on_enter, &state_scanned_on, &state_scanned_on_exit);
+State waiting(&state_waiting_on_enter, &state_waiting_on, &state_waiting_on_exit);
 
 // State machine
-#define EVENT_TAG_SCANNED 0
-#define EVENT_AUTOMATION_DONE 1
-
-State state_led_off(&led_off_enter, NULL, NULL);
-State state_led_on(&led_on_enter, NULL, NULL);
-State state_automation_on(&automation_on_enter, NULL, NULL);
-State state_automation_off(&automation_off_enter, NULL, NULL);
-
-Fsm fsm_led(&state_led_off);
-Fsm fsm_automation(&state_automation_off);
+Fsm scanner(&ready);
 
 // Transitions
-void led_off_enter() {
-  Serial.println("Turn off LED");
-  digitalWrite(LED_PIN, LOW);
+void state_ready_on_enter() {
+  Serial.println("FSM ->ready");
+  disable_leds();
 }
 
-void led_on_enter() {
-  Serial.println("Turn on LED");
-  digitalWrite(LED_PIN, HIGH);
+void state_ready_on() {
+  String uid = read_next_rfid();
+  if (uid != "") {
+    lastUid = uid;
+    scanner.trigger(event_tag_scanned);
+  }
 
-  Serial.println("Send scan");
-  sendPostRequest(lastUid);
+  clear_recent_scans();
+}
+
+void state_ready_on_exit() {
+  Serial.println("FSM ready->");
+}
+
+void state_scanned_on_enter() {
+  Serial.println("FSM ->scanned");
+
+  enable_leds();
+
+  automation.run(&automation_callback);
+
+  track_scan(lastUid);
   lastUid = "";
 }
 
-void automation_on_enter() {
-  Serial.println("Trigger animation");
-  digitalWrite(AUTOMATION_START_PIN, HIGH);
+void state_scanned_on() {
+  automation.update();
+
+  scanner.trigger(event_automation_started);
 }
 
-void automation_off_enter() {
-  Serial.println("Turn off animation");
-  digitalWrite(AUTOMATION_START_PIN, LOW);
+void state_scanned_on_exit() { 
+  Serial.println("FSM scanned->");
+
+  // disable_leds();  wait for animation to finish
 }
 
+void state_waiting_on_enter() {
+  Serial.println("FSM ->waiting");
+}
+
+void state_waiting_on() {
+  automation.update();
+}
+
+void state_waiting_on_exit() {
+  Serial.println("FSM waiting->");
+}
+
+void automation_callback() {
+  Serial.println("Automation is done. Triggering event event_automation_ended");
+  scanner.trigger(event_automation_ended);
+}
+
+// State transitions
 void on_event_tag_scanned() {
-  Serial.print("Scanned RFID ");
-  Serial.print(lastUid);
-  Serial.print(" at location ");
-  Serial.println(LOCATION, DEC);
+  Serial.print("Scanned tag ");
+  Serial.println(lastUid);
 
   lastScanAt = millis();
 
@@ -120,6 +120,18 @@ void on_event_tag_scanned() {
     recentlyScanned.drop();
   }
   recentlyScanned.push(lastUid);
+};
+
+void on_event_acknowledged() {}
+void on_event_automation_started(){}
+void on_event_automation_ended(){}
+
+void on_waiting_timed_out() {
+  Serial.println("[Timer] timed out while waiting for automation to end");
+}
+
+void on_scanned_timed_out() { 
+  Serial.println("[Timer] timed out while processing scan");
 }
 
 WiFiClient client;
@@ -134,56 +146,58 @@ void setup() {
 
   Serial.println("\n\nSetup start");
 
-  fsm_led.add_transition(&state_led_off, &state_led_on, EVENT_TAG_SCANNED, &on_event_tag_scanned);
-  fsm_led.add_timed_transition(&state_led_on, &state_led_off, LED_TIME_ON, NULL);
-  fsm_automation.add_timed_transition(&state_automation_on, &state_automation_off, LED_TIME_ON, NULL);
+  // Pins
+  pinMode(LED_PIN, OUTPUT);
 
-  matrix.letterDelay('W', 1000);
-  wifiConnect();
-  matrix.ok();
+  // FSM
+  // ready -> scanned
+  scanner.add_transition(&ready, &scanned, event_tag_scanned, &on_event_tag_scanned);
+  // scanned -> waiting
+  scanner.add_transition(&scanned, &waiting, event_automation_started, &on_event_acknowledged);
+  scanner.add_timed_transition(&scanned, &waiting, SCAN_TIMEOUT_MS, &on_scanned_timed_out);
+  // waiting -> ready
+  scanner.add_transition(&waiting, &ready, event_automation_ended, &on_event_automation_ended);
+  scanner.add_timed_transition(&waiting, &ready, AUTOMATION_TIMEOUT_MS, &on_waiting_timed_out);
 
-  matrix.letterDelay('S', 1000);
+  // Wifi setup
+  wifi_connect();
+  blink(1);
+
+  // Scanner setup
   SPI.begin();
   mfrc522.PCD_Init();
-  matrix.ok();
-
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(AUTOMATION_START_PIN, OUTPUT);
-  pinMode(AUTOMATION_END_PIN, INPUT);
-
-  digitalWrite(AUTOMATION_START_PIN, LOW);
-  digitalWrite(AUTOMATION_END_PIN, LOW);
-
   matrix.number(LOCATION);
+  blink(2);
+
+  automation.setup();
+  blink(3);
 }
 
 void loop() {
-  fsm_led.run_machine();
-  fsm_automation.run_machine();
-
-  detectRFID();
-  detectAutomationDone();
-  clearRecentScans();
+  scanner.run_machine();
 }
 
-void clearRecentScans() {
+void enable_leds() {
+  Serial.println("[Action] enable LEDs");
+  digitalWrite(LED_PIN, HIGH);
+}
+
+void disable_leds() {
+  Serial.println("[Action] disable LEDs");
+  digitalWrite(LED_PIN, LOW);
+}
+
+void clear_recent_scans() {
   if (CLEAR_HISTORY_AFTER_MS > 0 && lastScanAt > 0 && millis() - lastScanAt > CLEAR_HISTORY_AFTER_MS) {
-    Serial.println("Clearning recent scans");
+    Serial.println("[Action] clearning recent scans");
     lastScanAt = 0;
     while (!recentlyScanned.empty()) {
       recentlyScanned.drop();
     }
-    Serial.println("Done");
   }
 }
 
-void detectAutomationDone() {
-  if (digitalRead(AUTOMATION_END_PIN) == HIGH) {
-    fsm_automation.trigger(EVENT_AUTOMATION_DONE);
-  }
-}
-
-bool connectWithExponentialBackoff(WiFiClient& client, const char* server, uint16_t port, int maxRetries = 5, int initialDelayMs = 100) {
+bool connect_exp_backoff(WiFiClient& client, const char* server, uint16_t port, int maxRetries = 3, int initialDelayMs = 20) {
   int delayMs = initialDelayMs;
 
   for (int attempt = 1; attempt <= maxRetries; attempt++) {
@@ -202,9 +216,8 @@ bool connectWithExponentialBackoff(WiFiClient& client, const char* server, uint1
   return false;
 }
 
-
-void sendPostRequest(String uid) {
-  if (connectWithExponentialBackoff(client, server, port)) {
+void track_scan(String uid) {
+  if (connect_exp_backoff(client, server, port)) {
     // JSON payload
     StaticJsonDocument<200> jsonDoc;
     jsonDoc["id"] = uid;
@@ -225,9 +238,9 @@ void sendPostRequest(String uid) {
     client.println();          // Empty line before body
     client.println(jsonData);  // JSON data
 
-    Serial.println("POST request sent!");
+    Serial.println("[Action] tracked scan via HTTP POST");
   } else {
-    Serial.println("Connection failed!");
+    Serial.println("[Action] failed to track scan - connection failed!");
   }
 
   // Read response
@@ -239,12 +252,13 @@ void sendPostRequest(String uid) {
   client.stop();  // Close connection
 }
 
-void wifiConnect() {
-  for (int retries = 0; retries < 5; retries++) {
-    for (int i = 0; i < credentialCount; i++) {
-      Serial.print("Attempting to connect to SSID=");
-      Serial.print(credentials[i].ssid);
+void wifi_connect() {
+  for (int i = 0; i < credentialCount; i++) {
+    Serial.print("Attempting to connect to SSID=");
+    Serial.println(credentials[i].ssid);
 
+    int delayMS = 20;
+    for (int retries = 0; retries < 5; retries++) {
       if (credentials[i].password == nullptr || credentials[i].password[0] == '\0') {
         WiFi.begin(credentials[i].ssid);
       } else {
@@ -253,14 +267,18 @@ void wifiConnect() {
 
       int attempts = 0;
       while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-        delay(1000);
-        Serial.print(".");
+        delay(500);
         attempts++;
       }
 
       if (WiFi.status() == WL_CONNECTED) {
-        delay(2000);
-        Serial.print("\nConnected to SSID=");
+        attempts = 0;
+        while (WiFi.localIP() == "0.0.0.0" && attempts < 10) {
+          delay(200);
+          attempts++;
+        }
+
+        Serial.print("Connected to SSID=");
         Serial.print(WiFi.SSID());
         Serial.print(", IP Address=");
         Serial.print(WiFi.localIP());
@@ -269,32 +287,49 @@ void wifiConnect() {
         Serial.println("");
         return;
       } else {
-        Serial.println("Failed to connect.");
+        Serial.println("Failed to connect");
       }
+
+      Serial.print("Waiting ");
+      Serial.print(delayMS);
+      Serial.println("ms before trying again");
+      delay(delayMS);
+      delayMS *= 2;
     }
   }
   Serial.println("Could not connect to any known networks.");
 }
 
-void detectRFID() {
+String read_next_rfid() {
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    String uidStr = getUIDString(mfrc522.uid.uidByte, mfrc522.uid.size);
+    String uidStr = uid_string(mfrc522.uid.uidByte, mfrc522.uid.size);
     if (recentlyScanned.contains(uidStr)) {
-      return;
+      return "";
     }
-    lastUid = uidStr;
 
     mfrc522.PICC_HaltA();
 
-    fsm_led.trigger(EVENT_TAG_SCANNED);
+    return uidStr;
   }
+  return "";
 }
 
-String getUIDString(byte* uid, byte length) {
+String uid_string(byte* uid, byte length) {
   String uidStr = "";
   for (byte i = 0; i < length; i++) {
     if (uid[i] < 0x10) uidStr += "0";  // Ensure two-digit formatting
     uidStr += String(uid[i], HEX);
   }
   return uidStr;
+}
+
+void blink(int times) {
+  digitalWrite(LED_PIN, LOW);
+  for (int i = 0; i < times; i++) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(120);
+    digitalWrite(LED_PIN, LOW);
+    delay(100);
+  }
+  delay(1000);
 }
