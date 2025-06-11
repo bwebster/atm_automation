@@ -10,11 +10,11 @@
 #include "WifiCredentials.h"
 #include "Automation.h"
 
-// #include "DigitalSignalAutomation.h"
-// DigitalSignalAutomation automation;
+#include "DigitalSignalAutomation.h"
+DigitalSignalAutomation automation;
 
-#include "SoundAutomation.h"
-SoundAutomation automation;
+// #include "SoundAutomation.h"
+// SoundAutomation automation;
 
 // Configuration for LEDs that turn on after successful scan
 #define LED_PIN 8          // Pin to trigger LEDs
