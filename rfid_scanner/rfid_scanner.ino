@@ -253,11 +253,12 @@ void track_scan(String uid) {
 }
 
 void wifi_connect() {
-  for (int retries = 0; retries < 5; retries++) {
-    for (int i = 0; i < credentialCount; i++) {
-      Serial.print("Attempting to connect to SSID=");
-      Serial.print(credentials[i].ssid);
+  for (int i = 0; i < credentialCount; i++) {
+    Serial.print("Attempting to connect to SSID=");
+    Serial.println(credentials[i].ssid);
 
+    int delayMS = 20;
+    for (int retries = 0; retries < 5; retries++) {
       if (credentials[i].password == nullptr || credentials[i].password[0] == '\0') {
         WiFi.begin(credentials[i].ssid);
       } else {
@@ -266,14 +267,18 @@ void wifi_connect() {
 
       int attempts = 0;
       while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-        delay(1000);
-        Serial.print(".");
+        delay(500);
         attempts++;
       }
 
       if (WiFi.status() == WL_CONNECTED) {
-        delay(2000);
-        Serial.print("\nConnected to SSID=");
+        attempts = 0;
+        while (WiFi.localIP() == "0.0.0.0" && attempts < 10) {
+          delay(200);
+          attempts++;
+        }
+
+        Serial.print("Connected to SSID=");
         Serial.print(WiFi.SSID());
         Serial.print(", IP Address=");
         Serial.print(WiFi.localIP());
@@ -282,8 +287,14 @@ void wifi_connect() {
         Serial.println("");
         return;
       } else {
-        Serial.println("Failed to connect.");
+        Serial.println("Failed to connect");
       }
+
+      Serial.print("Waiting ");
+      Serial.print(delayMS);
+      Serial.println("ms before trying again");
+      delay(delayMS);
+      delayMS *= 2;
     }
   }
   Serial.println("Could not connect to any known networks.");

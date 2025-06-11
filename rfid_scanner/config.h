@@ -54,7 +54,9 @@ const int port = 80;
 //   #endif
 //
 // Then simply uncomment the #include "secrets.h" line below.
-#include "secrets.h"
+// #include "secrets.h"
+
+// Default configuration if there is no secrets.h file
 #ifndef CREDENTIALS
 static const WifiCredential credentials[] = {
   { "Life.Church", nullptr },  // open network
