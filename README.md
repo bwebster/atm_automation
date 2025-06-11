@@ -53,6 +53,8 @@ The `DigitalSignalAutomation` has the following functionality:
 
 #### SoundAutomation
 
+<img width="734" alt="Screenshot 2025-06-11 at 4 28 45 PM" src="https://github.com/user-attachments/assets/7986789c-4775-4b96-b55d-b7704ba92f2e" />
+
 Enable by uncommenting the following lines in `config.h`:
 
 ```c++
