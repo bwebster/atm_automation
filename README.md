@@ -3,6 +3,8 @@ ATM Automation Sketches
 
 ## RFID Scanner
 
+<img width="848" alt="Screenshot 2025-06-11 at 4 27 07 PM" src="https://github.com/user-attachments/assets/234d8a2c-268a-47dd-a0a1-ec826841bb6b" />
+
 The `rfid_scanner/rfid_scanner.ino` sketch will be installed onto each Arduino R4 UNO WiFi.  
 
 The general behavior is:
