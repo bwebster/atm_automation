@@ -22,4 +22,5 @@ Create a directory (using Spotlight is fine) to keep you .mp3 files in.  After a
 ```bash
 > cd ~/Documents/mp3s
 > cp -v `ls -1 *.mp3|sort` /Volumes/NO\ NAME
+> diskutil umount /Volumes/NO\ NAME
 ```
