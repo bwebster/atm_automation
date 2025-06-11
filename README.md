@@ -13,7 +13,11 @@ If using MacOS, it will add a bunch of Spotlight-related files that will mess st
 ```bash
 > sudo mdutil -d /Volumes/NO\ NAME
 > sudo mdutil -X /Volumes/NO\ NAME
+> find /Volumes/NO\ NAME -type f -name '.*' -delete
+> ls -al /Volumes/NO\ NAME
 ```
+
+You should see only your .mp3 files (and maybe a single `.fseventsd` file).
 
 **Cleanly copying files**
 
