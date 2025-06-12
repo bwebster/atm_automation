@@ -5,9 +5,9 @@
 // Automation
 // ----------
 // DigitalSignalAutomation will send a HIGH signal to start automation, and wait for a HIGH signal to indicate it's done.
-// Must pass either INPUT_PULLDOWN or INPUT_PULLUP to constructor.
+// RX pin defaults to INPUT_PULLDOWN.  Can be changed by passing a different mode to constructor, e.g. DigitalSignalAutomation automation(INPUT_PULLUP).
 #include "DigitalSignalAutomation.h"
-DigitalSignalAutomation automation(INPUT_PULLUP);
+DigitalSignalAutomation automation;
 
 // #include "SoundAutomation.h"
 // SoundAutomation automation;
