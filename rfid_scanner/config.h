@@ -4,11 +4,13 @@
 // ----------
 // Automation
 // ----------
-// #include "DigitalSignalAutomation.h"
-// DigitalSignalAutomation automation;
+// DigitalSignalAutomation will send a HIGH signal to start automation, and wait for a HIGH signal to indicate it's done.
+// Must pass either INPUT_PULLDOWN or INPUT_PULLUP to constructor.
+#include "DigitalSignalAutomation.h"
+DigitalSignalAutomation automation(INPUT_PULLUP);
 
-#include "SoundAutomation.h"
-SoundAutomation automation;
+// #include "SoundAutomation.h"
+// SoundAutomation automation;
 
 // --------
 // Scanning

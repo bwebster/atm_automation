@@ -3,17 +3,20 @@
 
 #include "Automation.h"
 
-const uint8_t TX_PIN = 5; // TX to sound module; HIGH to start sound
-const uint8_t RX_PIN = 4; // RX from sound module; HIGH by default, LOW when playing
+const uint8_t TX_PIN = 5; // TX to module; HIGH to start
+const uint8_t RX_PIN = 4; // RX from module; HIGH when done
 
 class DigitalSignalAutomation : public Automation {
 public:
+   DigitalSignalAutomation(uint8_t inputMode)
+    : inputMode(inputMode) {}
+
   /* one-time hardware setup */
   void setup() override {
     Serial.println("Setting up digital signal automation");
     pinMode(TX_PIN, OUTPUT);
+    pinMode(RX_PIN, inputMode); // Pass either INPUT_PULLDOWN or INPUT_PULLUP to constructor
     digitalWrite(TX_PIN, LOW);
-    pinMode(RX_PIN, INPUT_PULLUP);
   }
 
   void run(DoneCb cb) override {
@@ -27,25 +30,25 @@ public:
   void update() override {
     if (!active_) return;
 
-    if (digitalRead(RX_PIN) == LOW) { // playing
-      return;
+    bool now = digitalRead(TX_PIN);
+    if (last == LOW && now == HIGH) { /* rising edge: LOW->HIGH */
+      Serial.println("[Action] automation done");
+      active_ = false;
+      digitalWrite(TX_PIN, LOW); // reset output
+      if (doneCb_) {
+        DoneCb cb = doneCb_;  // copy in case cb restarts us
+        doneCb_ = nullptr;
+        cb();  // notify caller exactly once
+      }
     }
-
-    Serial.println("[Action] automation is done via RX");
-    active_ = false;
-    if (doneCb_) {
-      DoneCb cb = doneCb_;            // copy in case cb restarts us
-      doneCb_ = nullptr;
-      cb();                           // notify caller exactly once
-    }
-    
-    Serial.println("[Action] set automation TX to LOW");
-    digitalWrite(TX_PIN, LOW);        // reset output
+    last = now;
   }
 
 private:
   DoneCb doneCb_ = nullptr;
   bool   active_ = false;
+  bool last = HIGH;
+  uint8_t inputMode;
 };
 
 #endif
