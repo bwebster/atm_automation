@@ -43,7 +43,14 @@ DigitalSignalAutomation automation;
 
 Pinout:
 * Arduino pin 5 - TX, defaults to `LOW`
-* Arduino pin 4 - RX, defaults to `INPUT_PULLUP`
+* Arduino pin 4 - RX, defaults to `INPUT_PULLDOWN`
+
+You can override the RX pin default by passing in a different pin mode, e.g.
+
+```c++
+#include "DigitalSignalAutomation.h"
+DigitalSignalAutomation automation(INPUT_PULLUP);
+```
 
 The `DigitalSignalAutomation` has the following functionality:
 
