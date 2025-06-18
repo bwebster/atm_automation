@@ -34,7 +34,7 @@ public:
     Serial.println("Setting up WLED automation");
 
     wledSerial.begin(WLED_BAUD); // software UART to WLED
-    delay(1000);
+    delay(200);
 
     turnOnStartUpCheck();
     delay(5000);
