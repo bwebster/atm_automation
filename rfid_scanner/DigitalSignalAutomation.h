@@ -53,6 +53,15 @@ public:
     last = now;
   }
 
+  void cancel() override {
+    if (!active_) return;
+
+    Serial.println("[Cancel] automation was cancelled");
+    active_ = false;
+    doneCb_ = nullptr;
+    digitalWrite(TX_PIN, LOW);  // reset signal so it’s ready for next run
+  }
+
 private:
   DoneCb doneCb_ = nullptr;
   bool active_ = false;

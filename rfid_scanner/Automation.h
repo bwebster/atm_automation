@@ -10,6 +10,7 @@
  *    • starts on demand (run())
  *    • progresses without blocking (update())
  *    • calls a user‑supplied DoneCb exactly once when finished
+ *    • can be cancelled by calling cancel() at any time
  *
  *  No dynamic allocation, no <functional>; the callback is a plain
  *  C‑style pointer so it works on every Arduino target.
@@ -30,6 +31,9 @@ public:
   /* Advance the automation; should be cheap and non‑blocking.
      Call the saved cb once the work is complete.             */
   virtual void update() = 0;
+
+   /* Cancel the automation at any time. */
+  virtual void cancel() = 0;
 
   virtual ~Automation() = default;
 };
