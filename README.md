@@ -56,7 +56,28 @@ The `DigitalSignalAutomation` has the following functionality:
 
 * When automation is triggered, writes `HIGH` to TX pin
 * Then waits to detect a rising edge `LOW` -> `HIGH` on RX pin
-  * When detected, executes callback passed to `run()` 
+  * When detected, executes callback passed to `run()`
+* Can be cancelled by calling `cancel()`
+  
+#### DigitalSignalLowAutomation
+
+Enable by uncommenting the following lines in `config.h`:
+
+```c++
+#include "DigitalSignalLowAutomation.h"
+DigitalSignalLowAutomation automation;
+```
+
+Pinout:
+* Arduino pin 5 - TX, defaults to `LOW`
+* Arduino pin 4 - RX, defaults to `INPUT_PULLUP`
+
+The `DigitalSignalLowAutomation` has the following functionality:
+
+* When automation is triggered, writes `HIGH` to TX pin
+* Then waits to detect a falling edge `HIGH` -> `LOW` on RX pin
+  * When detected, executes callback passed to `run()`
+* Can be cancelled by calling `cancel()`
 
 #### SoundAutomation
 
@@ -81,6 +102,7 @@ The `SoundAutomation` has the following functionality:
   * Increments `track`
 * Then waits to detect a rising edge `LOW` -> `HIGH` on BUSY pin
   * When detected, executes callback passed to `run()` 
+* Can be cancelled by calling `cancel()`
 
 ##### MP3 Memory Card Tricks
 
@@ -131,3 +153,4 @@ The `WledAutomation` has the following functionality:
   * Increments `preset`
 * Waits a configurable amount of time
 * Turns off LEDs
+* Can be cancelled by calling `cancel()`
