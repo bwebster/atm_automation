@@ -108,3 +108,26 @@ Create a directory (using Spotlight is fine) to keep your .mp3 files in.  After 
 > cp -v `ls -1 *.mp3|sort` /Volumes/NO\ NAME
 > diskutil umount /Volumes/NO\ NAME
 ```
+
+#### WledAutomation
+
+<img width="881" alt="Screenshot 2025-06-20 at 8 53 47 AM" src="https://github.com/user-attachments/assets/5d39cba7-121f-4675-a85d-2324b70661e6" />
+
+Enable by uncommenting the following lines in `config.h`:
+
+```c++
+#include "WledAutomation.h"
+WledAutomation automation;
+```
+
+Pinout:
+* Arduino pin 5 - Serial TX
+* Arduino pin 4 - Serial RX
+
+The `WledAutomation` has the following functionality:
+
+* Sets `preset=1`
+* When automation is triggered, turns on LEDs to preset `preset`
+  * Increments `preset`
+* Waits a configurable amount of time
+* Turns off LEDs
