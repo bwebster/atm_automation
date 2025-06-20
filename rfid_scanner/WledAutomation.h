@@ -6,8 +6,8 @@
 #include <ArduinoJson.h> // External: https://github.com/bblanchon/ArduinoJson v7.3.0+
 
 // UART-to-WLED (software)
-#define TX_PIN 6    // UNO ➜ WLED RX
-#define RX_PIN 5    // UNO ⇐ WLED TX
+#define TX_PIN 5    // UNO ➜ WLED RX
+#define RX_PIN 4    // UNO ⇐ WLED TX
 #define WLED_BAUD 115200
 #define RUN_TIME_MS 10000 // How long to keep the lights on for
 
@@ -146,6 +146,7 @@ void turnOnPreset(uint8_t id)
   j["ps"] = id;
   sendJson(j);
 }
+
 void changeEffect(uint16_t effectId)
 {
   StaticJsonDocument<32> j;
