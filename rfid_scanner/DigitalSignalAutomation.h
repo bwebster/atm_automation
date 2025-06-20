@@ -9,7 +9,7 @@ const uint8_t RX_PIN = 4;  // RX from module; HIGH when done
 class DigitalSignalAutomation : public Automation {
 public:
   DigitalSignalAutomation()
-    : inputMode(INPUT_PULLDOWN) {}
+    : inputMode(INPUT) {}
 
   DigitalSignalAutomation(uint8_t inputMode)
     : inputMode(inputMode) {}
@@ -39,7 +39,7 @@ public:
   void update() override {
     if (!active_) return;
 
-    bool now = digitalRead(TX_PIN);
+    bool now = digitalRead(RX_PIN);
     if (last == LOW && now == HIGH) {
       Serial.println("[Action] automation done - rising edge detected");
       active_ = false;
@@ -51,6 +51,15 @@ public:
       }
     }
     last = now;
+  }
+
+  void cancel() override {
+    if (!active_) return;
+
+    Serial.println("[Cancel] automation was cancelled");
+    active_ = false;
+    doneCb_ = nullptr;
+    digitalWrite(TX_PIN, LOW);  // reset signal so it’s ready for next run
   }
 
 private:

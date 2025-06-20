@@ -102,6 +102,8 @@ void state_waiting_on() {
 
 void state_waiting_on_exit() {
   Serial.println("FSM waiting->");
+
+  automation.cancel();
 }
 
 void automation_callback() {

@@ -73,6 +73,12 @@ public:
     }
   }
 
+  void cancel() override {
+    if (!active_) return;
+
+    doneCb_ = nullptr;
+  }
+
 private:
   DoneCb doneCb_ = nullptr;
   bool active_ = false;
