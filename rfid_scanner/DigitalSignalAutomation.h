@@ -39,7 +39,7 @@ public:
   void update() override {
     if (!active_) return;
 
-    bool now = digitalRead(TX_PIN);
+    bool now = digitalRead(RX_PIN);
     if (last == LOW && now == HIGH) {
       Serial.println("[Action] automation done - rising edge detected");
       active_ = false;
