@@ -9,7 +9,7 @@ const uint8_t RX_PIN = 4;  // RX from module; HIGH when done
 class DigitalSignalAutomation : public Automation {
 public:
   DigitalSignalAutomation()
-    : inputMode(INPUT_PULLDOWN) {}
+    : inputMode(INPUT) {}
 
   DigitalSignalAutomation(uint8_t inputMode)
     : inputMode(inputMode) {}
