@@ -47,10 +47,10 @@ WledAutomation automation;
 #define LOCATION 7
 
 // Configure the IP address and port for the server software.
-// const char *server = "192.168.5.229";
-// const int port = 3000;
-const char* server = "atm-clv-37eca624ed8b.herokuapp.com";
-const int port = 80;
+const char *server = "192.168.5.230";
+const int port = 3000;
+// const char* server = "atm-clv-37eca624ed8b.herokuapp.com";
+// const int port = 80;
 
 // Add wifi credentials, to be tried in order until a successful connection.
 // For local development you can define credentials[] in a secrets.h file to add
@@ -68,7 +68,7 @@ const int port = 80;
 //   #endif
 //
 // Then simply uncomment the #include "secrets.h" line below.
-// #include "secrets.h"
+#include "secrets.h"
 
 // Default configuration if there is no secrets.h file
 #ifndef CREDENTIALS

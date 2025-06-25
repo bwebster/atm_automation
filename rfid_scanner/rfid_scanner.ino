@@ -32,7 +32,11 @@ unsigned long lastScanAt = 0;
 // If an RFID tag is scanned, and it's in this list, it will be ignored.
 // Prevents repeated scans.  MUST be at least 1.
 StringFifo<RECENT_SCAN_HISTORY_SIZE> recentlyScanned; 
-                                
+
+// If tracking fails to send, implement non-blocking exponential backoff to keep trying
+unsigned long trackScanLastAttempt = 0;
+int trackScanRetryDelayMS = 2; // ms
+const int trackScanMaxDelay = 3000; // max ms to wait between retry attempts
 
 // Events
 const uint8_t event_tag_scanned = 0;
@@ -76,20 +80,37 @@ void state_scanned_on_enter() {
 
   automation.run(&automation_callback);
 
-  track_scan(lastUid);
-  lastUid = "";
+  trackScanLastAttempt = 0; // time of last attempt
+  trackScanRetryDelayMS = 2;  // delay ms
 }
 
 void state_scanned_on() {
   automation.update();
 
-  scanner.trigger(event_automation_started);
+  if (lastUid == "") return;  // Nothing to retry
+
+  unsigned long now = millis();
+  if (now - trackScanLastAttempt >= trackScanRetryDelayMS) {
+    Serial.println("[Action] Attempting to send scan");
+
+    bool success = track_scan(lastUid);
+    trackScanLastAttempt = now;
+
+    if (success) {
+      Serial.println("[Action] Scan sent successfully");
+      lastUid = "";
+
+      scanner.trigger(event_automation_started);
+    } else {
+      Serial.println("[Action] Scan failed, backing off");
+
+      trackScanLastAttempt = min(trackScanLastAttempt * 2, trackScanMaxDelay);
+    }
+  }
 }
 
 void state_scanned_on_exit() { 
   Serial.println("FSM scanned->");
-
-  // disable_leds();  wait for animation to finish
 }
 
 void state_waiting_on_enter() {
@@ -199,28 +220,8 @@ void clear_recent_scans() {
   }
 }
 
-bool connect_exp_backoff(WiFiClient& client, const char* server, uint16_t port, int maxRetries = 3, int initialDelayMs = 2) {
-  int delayMs = initialDelayMs;
-
-  for (int attempt = 1; attempt <= maxRetries; attempt++) {
-    if (client.connect(server, port)) {
-      return true;
-    }
-
-    Serial.print("Connection failed. Backing off for ");
-    Serial.print(delayMs);
-    Serial.println("ms...");
-    delay(delayMs);
-    delayMs *= 2;  // Exponential backoff
-  }
-
-  Serial.println("All connection attempts failed!");
-  return false;
-}
-
-void track_scan(String uid) {
-  if (connect_exp_backoff(client, server, port)) {
-    // JSON payload
+bool track_scan(String uid) {
+  if (client.connect(server, port)) {
     StaticJsonDocument<200> jsonDoc;
     jsonDoc["id"] = uid;
     jsonDoc["loc"] = LOCATION;
@@ -241,8 +242,10 @@ void track_scan(String uid) {
     client.println(jsonData);  // JSON data
 
     Serial.println("[Action] tracked scan via HTTP POST");
+    return true;
   } else {
     Serial.println("[Action] failed to track scan - connection failed!");
+    return false;
   }
 
   // Read response
@@ -252,6 +255,8 @@ void track_scan(String uid) {
   }
 
   client.stop();  // Close connection
+
+  return true;
 }
 
 void wifi_connect() {
