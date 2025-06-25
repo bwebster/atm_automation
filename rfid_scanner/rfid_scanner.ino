@@ -199,7 +199,7 @@ void clear_recent_scans() {
   }
 }
 
-bool connect_exp_backoff(WiFiClient& client, const char* server, uint16_t port, int maxRetries = 3, int initialDelayMs = 20) {
+bool connect_exp_backoff(WiFiClient& client, const char* server, uint16_t port, int maxRetries = 3, int initialDelayMs = 2) {
   int delayMs = initialDelayMs;
 
   for (int attempt = 1; attempt <= maxRetries; attempt++) {
