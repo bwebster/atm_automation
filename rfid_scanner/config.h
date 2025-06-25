@@ -17,8 +17,8 @@ NoAutomation automation;
 // #include "DigitalSignalLowAutomation.h"
 // DigitalSignalLowAutomation automation;
 
-// #include "SoundAutomation.h"
-// SoundAutomation automation;
+#include "SoundAutomation.h"
+SoundAutomation automation;
 
 // #include "WledAutomation.h"
 // WledAutomation automation;
@@ -47,7 +47,7 @@ NoAutomation automation;
 #define RECENT_SCAN_HISTORY_SIZE 1
 
 // Location number to send after successful scan
-#define LOCATION 1
+#define LOCATION 5
 
 // Configure the IP address and port for the server software.
 // const char *server = "192.168.5.229";

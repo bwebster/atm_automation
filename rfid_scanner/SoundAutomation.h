@@ -28,7 +28,7 @@ public:
     Serial.print("Found number of tracks: ");
     Serial.println(numTracks);
 
-    player.setVolume(25);  // 0...30
+    player.setVolume(30);  // 0...30
   }
 
   void run(DoneCb cb) override {
