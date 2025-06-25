@@ -4,6 +4,9 @@
 // ----------
 // Automation
 // ----------
+#include "NoAutomation.h"
+NoAutomation automation;
+
 // DigitalSignalAutomation will send a HIGH signal to start automation, and wait for a HIGH signal to indicate it's done.
 // RX pin defaults to INPUT, but can be changed by passing a different mode to constructor, e.g. DigitalSignalAutomation automation(INPUT_PULLUP).
 // #include "DigitalSignalAutomation.h"
@@ -17,8 +20,8 @@
 // #include "SoundAutomation.h"
 // SoundAutomation automation;
 
-#include "WledAutomation.h"
-WledAutomation automation;
+// #include "WledAutomation.h"
+// WledAutomation automation;
 
 // #include "WledSoundAutomation.h"
 // WledSoundAutomation automation;
@@ -44,7 +47,7 @@ WledAutomation automation;
 #define RECENT_SCAN_HISTORY_SIZE 1
 
 // Location number to send after successful scan
-#define LOCATION 7
+#define LOCATION 1
 
 // Configure the IP address and port for the server software.
 // const char *server = "192.168.5.229";
