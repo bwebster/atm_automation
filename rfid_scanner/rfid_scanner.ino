@@ -53,6 +53,10 @@ Fsm scanner(&ready);
 void state_ready_on_enter() {
   Serial.println("FSM ->ready");
   disable_leds();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFI has disconnected.  Reconnecting...");
+    wifi_connect();
 }
 
 void state_ready_on() {
