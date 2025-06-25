@@ -27,10 +27,24 @@ The code has a couple different automations that can be enabled, which implement
 
 - `setup()`
 - `run(callback)`
+- `cancel()`
 
 The `setup()` will be called from the main `setup()` routine.
 
 The `run(callback)` will be called to start the automation.  A `void (*)` function can be passed as a "done callback", which should be called when the automation completes.
+
+The `cancel()` function can be called at any time to cancel an automation.  The `cancel()` implementation should reset the state so that the automation is ready to be triggered again.
+
+#### NoAutomation
+
+Enable by uncommenting the following lines in `config.h`:
+
+```c++
+#include "NoAutomation.h"
+NoAutomation automation;
+```
+
+This should be used when no automation is needed.
 
 #### DigitalSignalAutomation
 
