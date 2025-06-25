@@ -20,6 +20,10 @@ DigitalSignalAutomation automation;
 // #include "WledAutomation.h"
 // WledAutomation automation;
 
+#include "WledSoundAutomation.h"
+WledSoundAutomation automation;
+
+
 // --------
 // Scanning
 // --------
