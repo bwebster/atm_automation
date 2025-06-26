@@ -4,8 +4,8 @@
 // ----------
 // Automation
 // ----------
-#include "NoAutomation.h"
-NoAutomation automation;
+// #include "NoAutomation.h"
+// NoAutomation automation;
 
 // DigitalSignalAutomation will send a HIGH signal to start automation, and wait for a HIGH signal to indicate it's done.
 // RX pin defaults to INPUT, but can be changed by passing a different mode to constructor, e.g. DigitalSignalAutomation automation(INPUT_PULLUP).
@@ -14,8 +14,8 @@ NoAutomation automation;
 
 // DigitalSignalLowAutomation will send a HIGH signal to start automation, want wait for a LOW signal to indicate it's done.
 // RX pin defaults to INPUT_PULLUP.
-// #include "DigitalSignalLowAutomation.h"
-// DigitalSignalLowAutomation automation;
+#include "DigitalSignalLowAutomation.h"
+DigitalSignalLowAutomation automation;
 
 // #include "SoundAutomation.h"
 // SoundAutomation automation;
@@ -47,7 +47,7 @@ NoAutomation automation;
 #define RECENT_SCAN_HISTORY_SIZE 1
 
 // Location number to send after successful scan
-#define LOCATION 1
+#define LOCATION 2
 
 // Configure the IP address and port for the server software.
 // const char *server = "192.168.5.229";
