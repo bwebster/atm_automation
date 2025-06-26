@@ -51,7 +51,7 @@ SoundAutomation automation;
 // ---------------
 
 // Location number to send after successful scan
-#define LOCATION 5
+#define LOCATION 4
 
 // Delay between health check calls
 #define HEALTH_CHECK_INTERVAL_MS 1000 * 60
