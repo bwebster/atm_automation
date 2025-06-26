@@ -15,7 +15,7 @@ public:
     Serial.println("Setting up digital signal low automation");
     pinMode(TX_PIN, OUTPUT);
     pinMode(RX_PIN, INPUT_PULLUP);
-    digitalWrite(TX_PIN, LOW);
+    digitalWrite(TX_PIN, HIGH);
   }
 
   void run(DoneCb cb) override {
@@ -23,8 +23,8 @@ public:
 
     // Generate a clean LOW-to-HIGH edge
     digitalWrite(TX_PIN, LOW);   // force LOW
-    delay(10);                   // brief delay to ensure LOW state is latched
-    digitalWrite(TX_PIN, HIGH);  // rising edge now happens
+    // delay(10);                   // brief delay to ensure LOW state is latched
+    // digitalWrite(TX_PIN, HIGH);  // rising edge now happens
     last = HIGH;
     doneCb_ = cb;
     active_ = true;
@@ -38,7 +38,7 @@ public:
     if (last == HIGH && now == LOW) {
       Serial.println("[Action] automation done - falling edge detected");
       active_ = false;
-      digitalWrite(TX_PIN, LOW);  // reset signal so it’s ready for next run
+      digitalWrite(TX_PIN, HIGH);  // reset signal so it’s ready for next run
       if (doneCb_) {
         DoneCb cb = doneCb_;
         doneCb_ = nullptr;
@@ -54,7 +54,7 @@ public:
     Serial.println("[Cancel] automation was cancelled");
     active_ = false;
     doneCb_ = nullptr;
-    digitalWrite(TX_PIN, LOW);  // reset signal so it’s ready for next run
+    digitalWrite(TX_PIN, HIGH);  // reset signal so it’s ready for next run
   }
 
 private:
