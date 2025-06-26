@@ -57,6 +57,7 @@ void state_ready_on_enter() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFI has disconnected.  Reconnecting...");
     wifi_connect();
+  }
 }
 
 void state_ready_on() {
