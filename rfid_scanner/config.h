@@ -20,8 +20,8 @@ NoAutomation automation;
 // #include "SoundAutomation.h"
 // SoundAutomation automation;
 
-// #include "WledAutomation.h"
-// WledAutomation automation;
+#include "WledAutomation.h"
+WledAutomation automation;
 
 // #include "WledSoundAutomation.h"
 // WledSoundAutomation automation;
@@ -51,7 +51,7 @@ NoAutomation automation;
 // ---------------
 
 // Location number to send after successful scan
-#define LOCATION 0
+#define LOCATION 7
 
 // Delay between health check calls
 #define HEALTH_CHECK_INTERVAL_MS 1000 * 60
