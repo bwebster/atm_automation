@@ -296,7 +296,7 @@ void wifi_connect() {
     Serial.print("Attempting to connect to SSID=");
     Serial.println(credentials[i].ssid);
 
-    int delayMS = 20;
+    int delayMS = 2;
     for (int retries = 0; retries < 5; retries++) {
       if (credentials[i].password == nullptr || credentials[i].password[0] == '\0') {
         WiFi.begin(credentials[i].ssid);
@@ -306,7 +306,7 @@ void wifi_connect() {
 
       int attempts = 0;
       while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-        delay(500);
+        delay(200);
         attempts++;
       }
 
