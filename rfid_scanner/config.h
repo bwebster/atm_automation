@@ -53,7 +53,8 @@ NoAutomation automation;
 // Location number to send after successful scan
 #define LOCATION 0
 
-#define HEALTH_CHECK_INTERVAL_MS 10'000
+// Delay between health check calls
+#define HEALTH_CHECK_INTERVAL_MS 1000 * 60
 
 // Configure the IP address and port for the server software.
 // const char *server = "192.168.5.229";
