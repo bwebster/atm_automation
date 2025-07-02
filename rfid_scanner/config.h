@@ -46,8 +46,14 @@ NoAutomation automation;
 // Number of tags to keep in the history list. If a tag is in the list, it cannot be rescanned.
 #define RECENT_SCAN_HISTORY_SIZE 1
 
+// ---------------
+// General Config
+// ---------------
+
 // Location number to send after successful scan
 #define LOCATION 0
+
+#define HEALTH_CHECK_INTERVAL_MS 10'000
 
 // Configure the IP address and port for the server software.
 // const char *server = "192.168.5.229";

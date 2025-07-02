@@ -1,9 +1,10 @@
 #include <SPI.h>
 #include <WiFiS3.h>
 
-#include "Fsm.h"          // External: https://github.com/jonblack/arduino-fsm v2.2.0
-#include <MFRC522.h>      // External: https://github.com/miguelbalboa/rfid v1.4.12
-#include <ArduinoJson.h>  // External: https://github.com/bblanchon/ArduinoJson v7.3.0
+#include <ArduinoHttpClient.h> // External: https://github.com/arduino-libraries/ArduinoHttpClient v0.6.1
+#include "Fsm.h"               // External: https://github.com/jonblack/arduino-fsm v2.2.0
+#include <MFRC522.h>           // External: https://github.com/miguelbalboa/rfid v1.4.12
+#include <ArduinoJson.h>       // External: https://github.com/bblanchon/ArduinoJson v7.3.0
 
 #include "StringFifo.h"
 #include "Matrix.h"
@@ -129,6 +130,10 @@ void on_event_tag_scanned() {
   recentlyScanned.push(lastUid);
 };
 
+void on_ready_health_check() {
+  send_health_check();
+}
+
 void on_event_acknowledged() {}
 void on_event_automation_started(){}
 void on_event_automation_ended(){}
@@ -142,6 +147,7 @@ void on_scanned_timed_out() {
 }
 
 WiFiClient client;
+HttpClient httpClient = HttpClient(client, server, port);
 MFRC522 mfrc522(CS_PIN, RST_PIN);
 Matrix matrix;
 
@@ -157,6 +163,7 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
 
   // FSM
+  scanner.add_timed_transition(&ready, &ready, HEALTH_CHECK_INTERVAL_MS, &on_ready_health_check);
   // ready -> scanned
   scanner.add_transition(&ready, &scanned, event_tag_scanned, &on_event_tag_scanned);
   // scanned -> waiting
@@ -257,6 +264,31 @@ void track_scan(String uid) {
   }
 
   client.stop();  // Close connection
+}
+
+void send_health_check() {
+  StaticJsonDocument<200> jsonDoc;
+  jsonDoc["l"] = LOCATION;
+  String jsonData;
+  serializeJson(jsonDoc, jsonData);
+
+  Serial.println("[Action] sending health check");
+  httpClient.beginRequest();
+  httpClient.get("/api/health_checks");  // Path only
+  httpClient.sendHeader("Content-Type", "application/json");
+  httpClient.sendHeader("Content-Length", jsonData.length());
+  httpClient.beginBody();
+  httpClient.print(jsonData);
+  httpClient.endRequest();
+
+  // Print the HTTP response
+  int statusCode = httpClient.responseStatusCode();
+  String response = httpClient.responseBody();
+
+  Serial.print("[Action] health check result: status=");
+  Serial.print(statusCode);
+  Serial.print(", response=");
+  Serial.println(response);
 }
 
 void wifi_connect() {
