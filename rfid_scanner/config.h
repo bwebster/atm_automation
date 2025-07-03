@@ -36,12 +36,12 @@ NoAutomation automation;
 
 // Max time allowed for automation to complete.  
 // If timeout is hit, will move back to ready state.
-#define AUTOMATION_TIMEOUT_MS 15000
+#define AUTOMATION_TIMEOUT_MS 4000
 
 // Time to wait before clearning scan history.
 // Set to 0 to not automatically clear.  
 // If set to 0, and RECENT_SCAN_HISTORY_SIZE > 0, you will not be able to scan a tag multiple times in a row.
-#define CLEAR_HISTORY_AFTER_MS 30'000
+#define CLEAR_HISTORY_AFTER_MS 1000
 
 // Number of tags to keep in the history list. If a tag is in the list, it cannot be rescanned.
 #define RECENT_SCAN_HISTORY_SIZE 1
@@ -51,7 +51,7 @@ NoAutomation automation;
 // ---------------
 
 // Location number to send after successful scan
-#define LOCATION 0
+#define LOCATION 6
 
 // Delay between health check calls
 #define HEALTH_CHECK_INTERVAL_MS 1000 * 60
