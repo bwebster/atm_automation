@@ -4,8 +4,8 @@
 // ----------
 // Automation
 // ----------
-#include "NoAutomation.h"
-NoAutomation automation;
+// #include "NoAutomation.h"
+// NoAutomation automation;
 
 // DigitalSignalAutomation will send a HIGH signal to start automation, and wait for a HIGH signal to indicate it's done.
 // RX pin defaults to INPUT, but can be changed by passing a different mode to constructor, e.g. DigitalSignalAutomation automation(INPUT_PULLUP).
@@ -17,8 +17,8 @@ NoAutomation automation;
 // #include "DigitalSignalLowAutomation.h"
 // DigitalSignalLowAutomation automation;
 
-// #include "SoundAutomation.h"
-// SoundAutomation automation;
+#include "SoundAutomation.h"
+SoundAutomation automation;
 
 // #include "WledAutomation.h"
 // WledAutomation automation;
@@ -51,7 +51,7 @@ NoAutomation automation;
 // ---------------
 
 // Location number to send after successful scan
-#define LOCATION 0
+#define LOCATION 4
 
 // Delay between health check calls
 #define HEALTH_CHECK_INTERVAL_MS 1000 * 60
